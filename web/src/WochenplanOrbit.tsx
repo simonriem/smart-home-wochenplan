@@ -53,7 +53,7 @@ const CSS = `
   font-family:wo-face,ui-sans-serif,system-ui,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;
   --muted:#8a8178;--card:rgba(255,255,255,.62)}
 .wo-root *{box-sizing:border-box}
-.wo-canvas{position:absolute;left:50%;top:50%;width:${W}px;height:${H}px;transform:translate(-50%,-50%) scale(var(--wo-s,1))}
+.wo-canvas{position:absolute;left:50%;top:50%;width:var(--wo-w,${W}px);height:${H}px;transform:translate(-50%,-50%) scale(var(--wo-s,1))}
 .wo-arc{position:absolute;inset:0;width:${W}px;height:${H}px;overflow:visible;pointer-events:none}
 .wo-btn{appearance:none;border:0;background:none;color:inherit;font:inherit;padding:0;margin:0;cursor:pointer}
 .wo-status{position:absolute;right:40px;top:30px;text-align:right}
@@ -67,13 +67,13 @@ const CSS = `
 .wo-plate img{width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none}
 .wo-cutlery{width:84px;height:84px;fill:none;stroke:#b9ad9f;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
 .wo-plate.empty{display:grid;place-items:center;color:var(--muted);font-size:15px;text-align:center;line-height:1.4}
-.wo-head{position:absolute;left:432px;top:118px;width:300px;height:230px}
+.wo-head{position:absolute;left:432px;top:118px;width:min(380px,calc(var(--wo-w,${W}px) - 432px - 246px));height:230px}
 .wo-hd{position:absolute;inset:0;visibility:hidden}
 .wo-eye{font-size:14px;font-weight:600;margin:0 0 10px 2px;color:#5e554c}
 .wo-t1,.wo-t2{display:block;margin:0;text-transform:uppercase;line-height:.98}
 .wo-t1{font-weight:800;letter-spacing:-.025em;color:#2b2622}
 .wo-t2{font-weight:200;letter-spacing:-.01em;margin-top:8px}
-.wo-card{position:absolute;left:744px;top:150px;width:186px;padding:18px 18px 20px;border-radius:20px;background:var(--card);
+.wo-card{position:absolute;right:30px;top:150px;width:186px;padding:18px 18px 20px;border-radius:20px;background:var(--card);
   -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 18px 40px -24px rgba(0,0,0,.25)}
 .wo-bodies{display:grid}
 .wo-body{grid-area:1/1;visibility:hidden}
@@ -150,7 +150,12 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
   useLayoutEffect(() => {
     const el = rootRef.current
     if (!el) return
-    const fit = () => el.style.setProperty("--wo-s", String(Math.min(el.clientWidth / W, el.clientHeight / H)))
+    // Skaliert nach der Höhe, die Bühne wird bei breiteren Bildschirmen breiter (bis 1180 px), damit links und rechts kein leerer Rand bleibt.
+    const fit = () => {
+      const s = Math.min(el.clientWidth / W, el.clientHeight / H)
+      el.style.setProperty("--wo-s", String(s))
+      el.style.setProperty("--wo-w", Math.min(1180, Math.max(W, el.clientWidth / s)) + "px")
+    }
     fit()
     const ro = new ResizeObserver(fit)
     ro.observe(el)
