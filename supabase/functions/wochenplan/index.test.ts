@@ -1,5 +1,5 @@
 import { deepStrictEqual as assertEquals } from "node:assert";
-import { addDays, berlinNow, dayNote, firstNumber, isoMinutes, pickDays, toDish } from "./index.ts";
+import { addDays, berlinNow, dayNote, firstNumber, isoMinutes, pickDays, stepTexts, toDish } from "./index.ts";
 
 const plan = [
   { day: "Montag", recipes: [{ recipeSlug: "milchreis", cookFamily: "Kuhn" }] },
@@ -61,6 +61,7 @@ Deno.test("toDish mit und ohne Rezeptdatei", () => {
   assertEquals(d, {
     name: "Milchreis", slug: "milchreis", image: "https://bunkyo-kochbuch.vercel.app/recipes/images/milchreis.jpg",
     totalMinutes: 60, kcal: 203, protein: 6, diet: "vegetarisch", cook: "Kuhn",
+    servings: null, ingredients: [], steps: [], tip: null, url: "https://bunkyo-kochbuch.vercel.app/recipes/milchreis",
   });
   assertEquals(toDish({ recipeName: "Grillen" }, null).name, "Grillen");
   assertEquals(toDish({ recipeName: "Grillen" }, null).image, null);
@@ -80,4 +81,16 @@ Deno.test("pickDays: Tag nur mit Notiz gilt nicht als leer", () => {
   assertEquals(days[0].weekday, "Freitag");
   assertEquals(days[0].entry, null);
   assertEquals(days[0].note?.text, "Witcher Frankfurt");
+});
+
+Deno.test("Rezeptdetails: Zutaten, Schritte, Portionen, Tipp", () => {
+  const d = toDish({ recipeSlug: "x" }, {
+    name: "X", recipeYield: 4, ingredients: ["200 g Reis", " ", "1 Prise Salz"], tip: " Lecker ",
+    recipeInstructions: [{ "@type": "HowToStep", text: "Reis kochen." }, { "@type": "HowToStep", text: " " }, "Salzen."],
+  });
+  assertEquals(d.servings, "4");
+  assertEquals(d.ingredients, ["200 g Reis", "1 Prise Salz"]);
+  assertEquals(d.steps, ["Reis kochen.", "Salzen."]);
+  assertEquals(d.tip, "Lecker");
+  assertEquals(stepTexts([{ "@type": "HowToSection", itemListElement: [{ text: "A" }, { text: "B" }] }]), ["A", "B"]);
 });

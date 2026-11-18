@@ -32,6 +32,11 @@ export type Dish = {
   protein: number | null;
   diet: string | null;
   cook: string | null;
+  servings: string | null;
+  ingredients: string[];
+  steps: string[];
+  tip: string | null;
+  url: string | null;
 };
 
 export type Note = { text: string; cook: string | null };
@@ -123,6 +128,21 @@ export function pickDays(
   });
 }
 
+/** Rezeptschritte als Texte (HowToStep, HowToSection mit itemListElement oder reine Strings). */
+export function stepTexts(value: unknown): string[] {
+  if (!Array.isArray(value)) return typeof value === "string" && value.trim() ? [value.trim()] : [];
+  const out: string[] = [];
+  for (const s of value) {
+    if (typeof s === "string") { if (s.trim()) out.push(s.trim()); continue; }
+    if (s && typeof s === "object") {
+      const o = s as Record<string, unknown>;
+      if (Array.isArray(o.itemListElement)) out.push(...stepTexts(o.itemListElement));
+      else if (typeof o.text === "string" && o.text.trim()) out.push(o.text.trim());
+    }
+  }
+  return out;
+}
+
 export function toDish(entry: PlannedRecipe, recipe: Record<string, unknown> | null): Dish {
   const nutrition = (recipe?.nutrition ?? {}) as Record<string, unknown>;
   const image = typeof recipe?.image === "string" && recipe.image ? recipe.image : null;
@@ -138,6 +158,13 @@ export function toDish(entry: PlannedRecipe, recipe: Record<string, unknown> | n
     protein: firstNumber(nutrition.proteinContent),
     diet: typeof recipe?.diet === "string" ? recipe.diet : null,
     cook: entry.cookFamily ?? null,
+    servings: recipe?.recipeYield != null && recipe.recipeYield !== "" ? String(recipe.recipeYield) : null,
+    ingredients: Array.isArray(recipe?.ingredients)
+      ? (recipe!.ingredients as unknown[]).filter((x): x is string => typeof x === "string" && x.trim() !== "").map((x) => x.trim())
+      : [],
+    steps: stepTexts(recipe?.recipeInstructions),
+    tip: typeof recipe?.tip === "string" && recipe.tip.trim() ? recipe.tip.trim() : null,
+    url: entry.recipeSlug ? `${SITE}/recipes/${encodeURIComponent(entry.recipeSlug)}` : null,
   };
 }
 

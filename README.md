@@ -9,6 +9,9 @@ Zeigt den gemeinsamen Wochenplan der Kochbuch-Seite (bunkyo-kochbuch.vercel.app)
 - Pro Tag nur das erste Gericht, Notizen werden ignoriert. Ein leerer Tag zeigt „Noch nichts geplant“.
 - Abends (ab 18 Uhr), wenn das heutige Gericht im rollierenden Plan schon gelöscht ist, wird „Morgen“ zum großen Gericht.
 - Die Farbe des Bogens richtet sich nach der Ernährungsform: Fleisch korall, vegetarisch grün, vegan mint, Fisch blau.
+- Tipp auf das Gericht (Teller, Titel oder „Rezept öffnen“) öffnet die Rezeptansicht mit Zutaten zum Abhaken, allen Schritten und dem Tipp.
+- Kochmodus: ein Schritt pro Bildschirm in großer Schrift. Weiter und zurück per Taste oder Wischen, die Zutaten lassen sich seitlich einblenden. Zeitangaben im Schritt („10 Minuten“) werden zu Timer-Knöpfen mit Countdown, Ton und Vibration.
+- An leeren Tagen und Tagen nur mit Notiz führt „Im Kochbuch eintragen“ zur Wochenplan-Seite der Website. Das Dashboard selbst schreibt nichts.
 
 ## Aufbau
 ```

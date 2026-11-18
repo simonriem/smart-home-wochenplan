@@ -9,7 +9,15 @@ export type Dish = {
   protein: number | null
   diet: string | null
   cook: string | null
+  servings?: string | null
+  ingredients?: string[]
+  steps?: string[]
+  tip?: string | null
+  url?: string | null
 }
+
+/** Wochenplan-Seite der Kochbuch-Website (zum Eintragen). */
+export const PLAN_URL = "https://bunkyo-kochbuch.vercel.app/wochenplan"
 
 export type Note = { text: string; cook: string | null }
 export type Day = { date: string; weekday: string; dish: Dish | null; note?: Note | null }
@@ -132,7 +140,10 @@ export function demoPlan(now = new Date()): Plan {
   return {
     generatedAt: now.toISOString(),
     days: [
-      { ...day(0), dish: { name: "Hähnchen in Zitronen-Senf-Sauce", slug: "haehnchen-in-zitronen-senf-sauce", image: img("haehnchen-in-zitronen-senf-sauce.webp"), totalMinutes: 35, kcal: 540, protein: 41, diet: "fleisch", cook: "Riem" }, note: { text: "Simon nicht da", cook: null } },
+      { ...day(0), dish: { name: "Hähnchen in Zitronen-Senf-Sauce", slug: "haehnchen-in-zitronen-senf-sauce", image: img("haehnchen-in-zitronen-senf-sauce.webp"), totalMinutes: 35, kcal: 540, protein: 41, diet: "fleisch", cook: "Riem",
+        servings: "4", url: "https://bunkyo-kochbuch.vercel.app/recipes/haehnchen-in-zitronen-senf-sauce", tip: "Dazu passt Reis oder Baguette.",
+        ingredients: ["600 g Hähnchenbrust", "1 Zitrone, Saft und Abrieb", "2 EL Dijon-Senf", "200 g Sahne", "1 Zwiebel", "Salz, Pfeffer"],
+        steps: ["Zwiebel fein würfeln. Hähnchen in Streifen schneiden und salzen.", "Hähnchen in einer Pfanne 5–6 Minuten scharf anbraten, herausnehmen.", "Zwiebel glasig dünsten, mit Sahne ablöschen, Senf und Zitrone einrühren.", "Hähnchen zurück in die Sauce geben und 10 Minuten leise köcheln lassen. Abschmecken."] }, note: { text: "Simon nicht da", cook: null } },
       { ...day(1), dish: null, note: { text: "Witcher Frankfurt", cook: null } },
       { ...day(2), dish: { name: "Möhrenreis mit Lachsfilet", slug: "moehrenreis-mit-lachsfilet", image: img("moehrenreis-mit-lachsfilet.webp"), totalMinutes: 30, kcal: 610, protein: 38, diet: "fisch", cook: "Riem" } },
       { ...day(3), dish: null },

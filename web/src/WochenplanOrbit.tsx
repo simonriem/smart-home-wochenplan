@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { gsap } from "gsap"
-import { accentFor, eyebrow, fitSize, minutesLabel, shortLabel, splitTitle, type Day } from "./data"
+import { accentFor, eyebrow, fitSize, minutesLabel, PLAN_URL, shortLabel, splitTitle, type Day, type Dish } from "./data"
+import { RecipeSheet } from "./RecipeSheet"
 
 /*
  * Wochenplan-Orbit fürs Wand-Tablet (Querformat), angepasst aus dem
@@ -104,6 +105,7 @@ const CSS = `
 .wo-thumb{display:grid;place-items:center}
 .wo-tico{width:30px;height:30px;fill:none;stroke:#b9ad9f;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .wo-tcook{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wo-cta{display:block;width:100%;margin-top:16px;padding:10px 12px;border-radius:99px;background:#2b2622;color:#f4efe8;font-size:14px;font-weight:600;text-decoration:none;text-align:center;line-height:1.25}
 .wo-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){.wo-tile,.wo-thumb,.wo-today{transition:none}}
 `
@@ -132,6 +134,7 @@ type Props = {
 export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
   const n = days.length
   const [index, setIndex] = useState(0)
+  const [openDish, setOpenDish] = useState<Dish | null>(null)
 
   const rootRef = useRef<HTMLDivElement | null>(null)
   const orbits = useRef<(HTMLDivElement | null)[]>([])
@@ -250,6 +253,19 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
     if (!s) return
     const dx = e.clientX - s.x
     if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(e.clientY - s.y) * 1.4) go(index + (dx < 0 ? 1 : -1))
+    else if (Math.abs(dx) < 10 && Math.abs(e.clientY - s.y) < 10) openRecipe()
+  }
+
+  // Rezept öffnen: solange es offen ist, kein automatisches Zurückspringen.
+  const openRecipe = () => {
+    const dish = days[index]?.dish
+    if (!dish) return
+    window.clearTimeout(returnTimer.current)
+    setOpenDish(dish)
+  }
+  const closeRecipe = () => {
+    setOpenDish(null)
+    if (index !== 0) returnTimer.current = window.setTimeout(() => go(0), RETURN_MS)
   }
 
   const clock = now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" })
@@ -280,7 +296,7 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
           ))}
         </div>
 
-        <div className="wo-head" aria-live="polite">
+        <div className="wo-head" aria-live="polite" onClick={openRecipe} style={{ cursor: days[index]?.dish ? "pointer" : "default" }}>
           {days.map((d, i) => {
             const [t1, t2] = d.dish ? splitTitle(d.dish.name) : d.note ? [d.note.text, "Notiz"] : ["Noch nichts", "geplant"]
             const longest1 = Math.max(...t1.split(" ").map((w) => w.length))
@@ -320,6 +336,7 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
                           {dish.protein ? <li>{dish.protein} g Eiweiß</li> : null}
                         </ul>
                       ) : null}
+                      <div><button type="button" className="wo-btn wo-cta" tabIndex={i === index ? 0 : -1} onClick={openRecipe}>Rezept öffnen ›</button></div>
                     </>
                   ) : d.note ? (
                     <>
@@ -331,9 +348,13 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
                         </p>
                       </div>
                       <div><p className="wo-lbl">Wochenplan</p><p className="wo-time">Notiz, noch kein Rezept</p></div>
+                      <div><a className="wo-cta" href={PLAN_URL} target="_blank" rel="noreferrer" tabIndex={i === index ? 0 : -1}>Im Kochbuch eintragen ›</a></div>
                     </>
                   ) : (
-                    <div><p className="wo-lbl">Wochenplan</p><p className="wo-time">Noch kein Gericht eingetragen.</p></div>
+                    <>
+                      <div><p className="wo-lbl">Wochenplan</p><p className="wo-time">Noch kein Gericht eingetragen.</p></div>
+                      <div><a className="wo-cta" href={PLAN_URL} target="_blank" rel="noreferrer" tabIndex={i === index ? 0 : -1}>Im Kochbuch eintragen ›</a></div>
+                    </>
                   )}
                 </div>
               )
@@ -362,6 +383,7 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
           </div>
         </div>
       </div>
+      {openDish ? <RecipeSheet dish={openDish} onClose={closeRecipe} /> : null}
       <p className="wo-sr" aria-live="polite">{current ? `${current.weekday}: ${current.dish?.name ?? "noch nichts geplant"}` : ""}</p>
     </div>
   )
