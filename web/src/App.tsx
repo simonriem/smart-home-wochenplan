@@ -4,8 +4,46 @@ import { WochenplanOrbit } from "./WochenplanOrbit"
 
 const REFRESH_MS = 5 * 60_000
 const params = new URLSearchParams(location.search)
-const KEY = params.get("key") ?? ""
 const DEMO = params.has("demo")
+const KEY_STORE = "wochenplan-key"
+
+/**
+ * Schlüssel aus der Adresse übernehmen und merken, damit die installierte App
+ * ohne ?key=… startet (der Schlüssel steht so nicht im öffentlichen Manifest).
+ */
+function resolveKey(): string {
+  const fromUrl = params.get("key")
+  try {
+    if (fromUrl) {
+      localStorage.setItem(KEY_STORE, fromUrl)
+      history.replaceState(null, "", location.pathname) // Schlüssel aus der Adresszeile entfernen
+      return fromUrl
+    }
+    return localStorage.getItem(KEY_STORE) ?? ""
+  } catch {
+    return fromUrl ?? ""
+  }
+}
+const KEY = DEMO ? "" : resolveKey()
+
+/** Display anlassen, solange die Seite sichtbar ist (Screen Wake Lock). */
+function useWakeLock() {
+  useEffect(() => {
+    type Sentinel = { release: () => Promise<void> }
+    const nav = navigator as Navigator & { wakeLock?: { request: (t: "screen") => Promise<Sentinel> } }
+    if (!nav.wakeLock) return
+    let lock: Sentinel | null = null
+    const acquire = () => {
+      if (document.visibilityState === "visible") nav.wakeLock!.request("screen").then((l) => (lock = l)).catch(() => {})
+    }
+    acquire()
+    document.addEventListener("visibilitychange", acquire)
+    return () => {
+      document.removeEventListener("visibilitychange", acquire)
+      lock?.release().catch(() => {})
+    }
+  }, [])
+}
 
 function syncText(at: number | null, now: number): string {
   if (!at) return "Wird geladen …"
@@ -20,6 +58,7 @@ export default function App() {
   const [now, setNow] = useState(() => new Date())
   const lastDay = useRef(berlinToday())
   const busy = useRef(false)
+  useWakeLock()
 
   const refresh = useCallback(async () => {
     if (DEMO) { setPlan(demoPlan()); setSyncedAt(Date.now()); return }
@@ -32,7 +71,7 @@ export default function App() {
       setSyncedAt(Date.now())
       setError(null)
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Abruf fehlgeschlagen")
+      setError(e instanceof TypeError ? "Keine Verbindung" : e instanceof Error ? e.message : "Abruf fehlgeschlagen")
     } finally {
       busy.current = false
     }
@@ -60,7 +99,7 @@ export default function App() {
   }, [refresh])
 
   if (!KEY && !DEMO) {
-    return <Message title="Dashboard-Schlüssel fehlt" text="Die Adresse muss ?key=… enthalten." />
+    return <Message title="Dashboard-Schlüssel fehlt" text="Einmal die Adresse mit ?key=… öffnen, danach merkt sich das Tablet den Schlüssel." />
   }
   if (!plan?.days?.length) {
     return <Message title={error ? "Wochenplan gerade nicht erreichbar" : "Wochenplan wird geladen …"} text={error ?? ""} />

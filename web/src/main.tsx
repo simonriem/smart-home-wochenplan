@@ -7,3 +7,8 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </StrictMode>,
 )
+
+// Service Worker: macht die Seite als App installierbar (Chrome: "App installieren")
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}))
+}

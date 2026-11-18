@@ -29,6 +29,8 @@ Rezeptbilder lädt das Tablet direkt von bunkyo-kochbuch.vercel.app/recipes/imag
 
 ## Tablet-Adresse
 `https://simonriem.github.io/smart-home-wochenplan/?key=<DASHBOARD_KEY>`
+Einmal mit `?key=` öffnen. Danach speichert das Tablet den Schlüssel und entfernt ihn aus der Adresszeile.
+Dann in Chrome über das Menü „App installieren“ wählen. Die App startet im Vollbild und im Querformat, und das Display bleibt an, solange sie offen ist.
 Mit Beispieldaten ohne Schlüssel: `…/?demo=1`
 
 ## Verhalten bei Problemen
