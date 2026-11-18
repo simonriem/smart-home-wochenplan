@@ -1,12 +1,12 @@
 import { deepStrictEqual as assertEquals } from "node:assert";
-import { addDays, berlinNow, firstNumber, isoMinutes, pickDays, toDish } from "./index.ts";
+import { addDays, berlinNow, dayNote, firstNumber, isoMinutes, pickDays, toDish } from "./index.ts";
 
 const plan = [
   { day: "Montag", recipes: [{ recipeSlug: "milchreis", cookFamily: "Kuhn" }] },
   { day: "Dienstag", recipes: [] },
   { day: "Mittwoch", recipes: [{ recipeName: "Oma kommt", isNote: true }, { recipeSlug: "chili-con-carne", cookFamily: "Riem" }] },
   { day: "Donnerstag", recipes: [{ recipeSlug: "kaesespaetzle" }] },
-  { day: "Freitag", recipes: [] },
+  { day: "Freitag", recipes: [{ recipeName: "Witcher Frankfurt", isNote: true }] },
   { day: "Samstag", recipes: [] },
   { day: "Sonntag", recipes: [{ recipeSlug: "pizza" }] },
 ];
@@ -64,4 +64,20 @@ Deno.test("toDish mit und ohne Rezeptdatei", () => {
   });
   assertEquals(toDish({ recipeName: "Grillen" }, null).name, "Grillen");
   assertEquals(toDish({ recipeName: "Grillen" }, null).image, null);
+});
+
+Deno.test("dayNote: Notiz allein, mit Rezept, mehrere", () => {
+  assertEquals(dayNote(plan, "Freitag"), { text: "Witcher Frankfurt", cook: null });
+  assertEquals(dayNote(plan, "Mittwoch"), { text: "Oma kommt", cook: null });
+  assertEquals(dayNote(plan, "Montag"), null);
+  const multi = [{ day: "Montag", recipes: [{ recipeName: "A", isNote: true, cookFamily: "Kuhn" }, { recipeName: " B ", isNote: true }] }];
+  assertEquals(dayNote(multi, "Montag"), { text: "A · B", cook: "Kuhn" });
+});
+
+Deno.test("pickDays: Tag nur mit Notiz gilt nicht als leer", () => {
+  const p = [{ day: "Freitag", recipes: [{ recipeName: "Witcher Frankfurt", isNote: true }] }];
+  const days = pickDays(p, new Date("2026-11-20T19:00:00Z")); // Fr 20 Uhr
+  assertEquals(days[0].weekday, "Freitag");
+  assertEquals(days[0].entry, null);
+  assertEquals(days[0].note?.text, "Witcher Frankfurt");
 });

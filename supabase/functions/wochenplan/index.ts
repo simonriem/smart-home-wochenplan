@@ -34,7 +34,8 @@ export type Dish = {
   cook: string | null;
 };
 
-export type DayOut = { date: string; weekday: string; dish: Dish | null };
+export type Note = { text: string; cook: string | null };
+export type DayOut = { date: string; weekday: string; dish: Dish | null; note: Note | null };
 
 let sessionCookie: string | null = null;
 let responseCache: { at: number; body: string } | null = null;
@@ -93,18 +94,32 @@ export function firstDish(days: DayPlan[], weekday: string): PlannedRecipe | nul
   return entry ?? null;
 }
 
+/** Alle Notizen eines Wochentags, zu einer zusammengefasst ("A · B"). */
+export function dayNote(days: DayPlan[], weekday: string): Note | null {
+  const day = days.find((d) => d.day === weekday);
+  const notes = (day?.recipes ?? []).filter((r) => r.isNote && (r.recipeName ?? "").trim());
+  if (!notes.length) return null;
+  return {
+    text: notes.map((n) => n.recipeName!.trim()).join(" · "),
+    cook: notes.find((n) => n.cookFamily)?.cookFamily ?? null,
+  };
+}
+
 /**
  * Welche vier Tage werden gezeigt? Normal: heute + 3. Abends, wenn das heutige
  * Gericht schon aus dem rollierenden Plan gelöscht wurde: ab morgen.
  */
-export function pickDays(days: DayPlan[], now: Date): { date: string; weekday: string; entry: PlannedRecipe | null }[] {
+export function pickDays(
+  days: DayPlan[],
+  now: Date,
+): { date: string; weekday: string; entry: PlannedRecipe | null; note: Note | null }[] {
   const { date, weekdayIndex, hour } = berlinNow(now);
-  const todayEmpty = !firstDish(days, WEEKDAYS[weekdayIndex]);
+  const todayEmpty = !firstDish(days, WEEKDAYS[weekdayIndex]) && !dayNote(days, WEEKDAYS[weekdayIndex]);
   const start = todayEmpty && hour >= EVENING_HOUR ? 1 : 0;
   return [0, 1, 2, 3].map((i) => {
     const offset = start + i;
     const weekday = WEEKDAYS[(weekdayIndex + offset) % 7];
-    return { date: addDays(date, offset), weekday, entry: firstDish(days, weekday) };
+    return { date: addDays(date, offset), weekday, entry: firstDish(days, weekday), note: dayNote(days, weekday) };
   });
 }
 
@@ -184,6 +199,7 @@ async function buildResponse(): Promise<string> {
     date: p.date,
     weekday: p.weekday,
     dish: p.entry ? toDish(p.entry, p.entry.recipeSlug ? await loadRecipe(p.entry.recipeSlug) : null) : null,
+    note: p.note,
   })));
   return JSON.stringify({ generatedAt: new Date().toISOString(), days });
 }

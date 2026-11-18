@@ -97,11 +97,30 @@ const CSS = `
 .wo-tday{font-size:12px;font-weight:600;color:#5e554c}
 .wo-tname{font-size:15px;font-weight:500;line-height:1.2;margin:2px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .wo-tcook{font-size:11px;color:var(--muted)}
+.wo-note{display:flex;align-items:center;gap:8px;margin:16px 0 0 2px;padding:7px 14px 7px 10px;border-radius:99px;width:max-content;max-width:300px;
+  background:rgba(255,255,255,.66);font-size:14px;font-weight:500;color:#5e554c}
+.wo-note span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wo-nico{flex:none;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.wo-thumb{display:grid;place-items:center}
+.wo-tico{width:30px;height:30px;fill:none;stroke:#b9ad9f;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.wo-tcook{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wo-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){.wo-tile,.wo-thumb,.wo-today{transition:none}}
 `
 
+const NOTE_ICON = (cls: string) => (
+  <svg className={cls} viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h10l4 4v12H5zM15 4v4h4M8 12h8M8 16h5" /></svg>
+)
+const CUTLERY = <svg className="wo-cutlery" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v7a2 2 0 0 0 2 2v9M11 3v7a2 2 0 0 1-2 2M9 3v6M17 21V3c-2 1-3 4-3 7 0 2 1 3 3 3" /></svg>
+
 const COOK_COLOR: Record<string, string> = { Riem: "#e0895e", Kuhn: "#6f9fc6" }
+
+/** Kleine Zeile unter dem Namen in der Leiste: wer kocht, Notiz. */
+function tileMeta(d: Day): string {
+  if (d.dish) return [d.dish.cook, d.note ? "Notiz: " + d.note.text : null].filter(Boolean).join(" · ")
+  if (d.note) return d.note.cook ? d.note.cook + " · Notiz" : "Notiz"
+  return ""
+}
 
 type Props = {
   days: Day[]
@@ -250,7 +269,7 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
               {d.dish?.image ? (
                 <div className="wo-plate"><img src={d.dish.image} alt={d.dish.name} draggable={false} /></div>
               ) : (
-                <div className="wo-plate empty">{d.dish ? d.dish.name : <svg className="wo-cutlery" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v7a2 2 0 0 0 2 2v9M11 3v7a2 2 0 0 1-2 2M9 3v6M17 21V3c-2 1-3 4-3 7 0 2 1 3 3 3" /></svg>}</div>
+                <div className="wo-plate empty">{d.dish ? d.dish.name : d.note ? NOTE_ICON("wo-cutlery") : CUTLERY}</div>
               )}
             </div>
           ))}
@@ -258,7 +277,7 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
 
         <div className="wo-head" aria-live="polite">
           {days.map((d, i) => {
-            const [t1, t2] = d.dish ? splitTitle(d.dish.name) : ["Noch nichts", "geplant"]
+            const [t1, t2] = d.dish ? splitTitle(d.dish.name) : d.note ? [d.note.text, "Notiz"] : ["Noch nichts", "geplant"]
             const longest1 = Math.max(...t1.split(" ").map((w) => w.length))
             return (
               <div key={d.date} ref={(el) => { heads.current[i] = el }} className="wo-hd" aria-hidden={i !== index}>
@@ -267,6 +286,7 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
                   <span className="wo-t1" style={{ fontSize: fitSize(Math.max(longest1, t1.length / 2), 56, 26, 290, 0.8) + "px" }}>{t1}</span>
                   {t2 ? <span className="wo-t2" style={{ fontSize: fitSize(t2.length / 1.6, 30, 17, 300, 0.56) + "px" }}>{t2}</span> : null}
                 </h2>
+                {d.dish && d.note ? <p className="wo-note">{NOTE_ICON("wo-nico")}<span>{d.note.text}</span></p> : null}
               </div>
             )
           })}
@@ -296,6 +316,17 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
                         </ul>
                       ) : null}
                     </>
+                  ) : d.note ? (
+                    <>
+                      <div>
+                        <p className="wo-lbl">Kocht</p>
+                        <p className="wo-cook">
+                          {d.note.cook ? <span className="wo-dot" style={{ background: COOK_COLOR[d.note.cook] ?? "#aaa" }} /> : null}
+                          {d.note.cook ?? "Offen"}
+                        </p>
+                      </div>
+                      <div><p className="wo-lbl">Wochenplan</p><p className="wo-time">Notiz, noch kein Rezept</p></div>
+                    </>
                   ) : (
                     <div><p className="wo-lbl">Wochenplan</p><p className="wo-time">Noch kein Gericht eingetragen.</p></div>
                   )}
@@ -314,11 +345,11 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
               const i = j + 1
               return (
                 <button key={d.date} type="button" className="wo-btn wo-tile" aria-current={i === index ? "true" : undefined} onClick={() => go(i === index ? 0 : i)}>
-                  <span className="wo-thumb">{d.dish?.image ? <img src={d.dish.image} alt="" draggable={false} /> : null}</span>
+                  <span className="wo-thumb">{d.dish?.image ? <img src={d.dish.image} alt="" draggable={false} /> : d.note && !d.dish ? NOTE_ICON("wo-tico") : null}</span>
                   <span className="wo-tt">
                     <span className="wo-tday" style={{ display: "block" }}>{shortLabel(d.date, d.weekday, now)}</span>
-                    <span className="wo-tname">{d.dish?.name ?? "Noch nichts geplant"}</span>
-                    {d.dish?.cook ? <span className="wo-tcook">{d.dish.cook}</span> : null}
+                    <span className="wo-tname">{d.dish?.name ?? d.note?.text ?? "Noch nichts geplant"}</span>
+                    {tileMeta(d) ? <span className="wo-tcook">{tileMeta(d)}</span> : null}
                   </span>
                 </button>
               )

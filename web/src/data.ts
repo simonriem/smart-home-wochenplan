@@ -11,7 +11,8 @@ export type Dish = {
   cook: string | null
 }
 
-export type Day = { date: string; weekday: string; dish: Dish | null }
+export type Note = { text: string; cook: string | null }
+export type Day = { date: string; weekday: string; dish: Dish | null; note?: Note | null }
 export type Plan = { generatedAt: string; days: Day[] }
 
 export const API_URL = "https://ombgktunotqrrbzzklmf.supabase.co/functions/v1/wochenplan"
@@ -131,8 +132,8 @@ export function demoPlan(now = new Date()): Plan {
   return {
     generatedAt: now.toISOString(),
     days: [
-      { ...day(0), dish: { name: "Hähnchen in Zitronen-Senf-Sauce", slug: "haehnchen-in-zitronen-senf-sauce", image: img("haehnchen-in-zitronen-senf-sauce.webp"), totalMinutes: 35, kcal: 540, protein: 41, diet: "fleisch", cook: "Riem" } },
-      { ...day(1), dish: { name: "Käsespätzle", slug: "kaesespaetzle", image: img("kaesespaetzle.webp"), totalMinutes: 40, kcal: 720, protein: 30, diet: "vegetarisch", cook: "Kuhn" } },
+      { ...day(0), dish: { name: "Hähnchen in Zitronen-Senf-Sauce", slug: "haehnchen-in-zitronen-senf-sauce", image: img("haehnchen-in-zitronen-senf-sauce.webp"), totalMinutes: 35, kcal: 540, protein: 41, diet: "fleisch", cook: "Riem" }, note: { text: "Simon nicht da", cook: null } },
+      { ...day(1), dish: null, note: { text: "Witcher Frankfurt", cook: null } },
       { ...day(2), dish: { name: "Möhrenreis mit Lachsfilet", slug: "moehrenreis-mit-lachsfilet", image: img("moehrenreis-mit-lachsfilet.webp"), totalMinutes: 30, kcal: 610, protein: 38, diet: "fisch", cook: "Riem" } },
       { ...day(3), dish: null },
     ],
