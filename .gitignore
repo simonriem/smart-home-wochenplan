@@ -1,0 +1,3 @@
+node_modules/
+web/dist/
+# docs/ = gebaute Seite für GitHub Pages (in web/: npm run build, dann dist/ nach docs/ kopieren)
