@@ -1,6 +1,6 @@
 // Service Worker: macht die Seite installierbar und startet sie auch ohne Netz
 // (die Daten kommen dann aus dem lokalen Zwischenspeicher der Seite).
-const CACHE = "wochenplan-v4"
+const CACHE = "wochenplan-v5"
 
 self.addEventListener("install", () => self.skipWaiting())
 self.addEventListener("activate", (e) => {

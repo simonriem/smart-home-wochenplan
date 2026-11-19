@@ -38,9 +38,9 @@ Dann in Chrome über das Menü „App installieren“ wählen. Die App startet i
 Mit Beispieldaten ohne Schlüssel: `…/?demo=1`
 
 ## Hell und Dunkel
-- Standard: Die Seite folgt dem Dunkelmodus des Tablets (Samsung: Dunkelmodus nach Zeitplan, Sonnenuntergang bis Sonnenaufgang). Dunkel ist ein warmes Braun-Anthrazit mit Creme-Schrift und bernsteinfarbenen Knöpfen.
-- Die Seite meldet `color-scheme: light dark`, damit die WebView (z. B. Fully Kiosk) nicht selbst umfärbt.
-- Fest einstellen: einmal `…/?theme=dark`, `…/?theme=light` oder zurück mit `…/?theme=auto` öffnen. Das Tablet merkt sich die Wahl.
+- Standard (`sonne`): Die Seite rechnet Sonnenauf- und -untergang für Kaiserslautern selbst aus. Dazwischen ist sie hell, sonst dunkel (warmes Braun-Anthrazit, Creme-Schrift, bernsteinfarbene Knöpfe). Das funktioniert auch in Fully Kiosk, dessen WebView den Dunkelmodus des Tablets nicht zuverlässig weitergibt.
+- Andere Wahl: einmal `…/?theme=auto` (folgt dem Dunkelmodus des Geräts), `…/?theme=light` oder `…/?theme=dark` öffnen, zurück mit `…/?theme=sonne`. Das Tablet merkt sich die Wahl.
+- Die Seite meldet `color-scheme`, damit die WebView nicht selbst umfärbt.
 
 ## Verhalten bei Problemen
 - Kochbuch-Seite oder Netz weg: Das Tablet zeigt den letzten gespeicherten Stand und „Offline · Stand: …“.
