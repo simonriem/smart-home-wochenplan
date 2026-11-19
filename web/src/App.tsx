@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { berlinToday, demoPlan, fetchPlan, isCacheUsable, readCache, writeCache, type Plan } from "./data"
+import { Ruhe } from "./Ruhe"
 import { WochenplanOrbit } from "./WochenplanOrbit"
 
 const REFRESH_MS = 5 * 60_000
 const params = new URLSearchParams(location.search)
 const DEMO = params.has("demo")
+// ?view=ruhe: Ruhe-Ansicht (Uhr, Essen, Wetter, Müll) als Bildschirmschoner in Fully Kiosk
+const VIEW = params.get("view")
 const KEY_STORE = "wochenplan-key"
 
 /**
@@ -16,7 +19,9 @@ function resolveKey(): string {
   try {
     if (fromUrl) {
       localStorage.setItem(KEY_STORE, fromUrl)
-      history.replaceState(null, "", location.pathname) // Schlüssel aus der Adresszeile entfernen
+      const rest = new URLSearchParams(location.search)
+      rest.delete("key") // nur den Schlüssel aus der Adresszeile entfernen, view/theme bleiben
+      history.replaceState(null, "", location.pathname + (rest.toString() ? "?" + rest.toString() : ""))
       return fromUrl
     }
     return localStorage.getItem(KEY_STORE) ?? ""
@@ -97,6 +102,8 @@ export default function App() {
       window.removeEventListener("online", refresh)
     }
   }, [refresh])
+
+  if (VIEW === "ruhe") return <Ruhe day={plan?.days?.[0] ?? null} now={now} />
 
   if (!KEY && !DEMO) {
     return <Message title="Dashboard-Schlüssel fehlt" text="Einmal die Adresse mit ?key=… öffnen, danach merkt sich das Tablet den Schlüssel." />

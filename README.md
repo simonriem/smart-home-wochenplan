@@ -42,6 +42,16 @@ Mit Beispieldaten ohne Schlüssel: `…/?demo=1`
 - Andere Wahl: einmal `…/?theme=auto` (folgt dem Dunkelmodus des Geräts), `…/?theme=light` oder `…/?theme=dark` öffnen, zurück mit `…/?theme=sonne`. Das Tablet merkt sich die Wahl.
 - Die Seite meldet `color-scheme`, damit die WebView nicht selbst umfärbt.
 
+## Ruhe-Ansicht (Bildschirmschoner)
+`…/?view=ruhe`: große Uhr, Datum, Wetter (Open-Meteo, Kaiserslautern), was es heute bzw. morgen gibt und die nächste Abholung je Tonne. Morgen fällige Tonnen werden hervorgehoben („Heute Abend rausstellen“). Hell/Dunkel wie das Dashboard, der Inhalt wandert alle paar Minuten ein Stück.
+In Fully Kiosk als Bildschirmschoner-URL eintragen. Den Schlüssel kennt das Tablet schon, er muss dort nicht mit rein.
+
+### Müll-Termine
+- Quelle: Müllmax-Abfallkalender der Stadtbildpflege (ask.muellmax.de), iCal mit **Einzelterminen** und allen Abfallarten.
+- Einlesen: `cd web && npm run muell -- /pfad/SK_Abfuhrtermine.ics` → `src/muell-termine.json` (nur Datum, Art und Rhythmus, keine Adresse). Danach bauen und `web/dist` nach `docs` kopieren.
+- Welcher Rhythmus für unsere Tonnen gilt, steht in `AUSWAHL` in `web/src/muell.ts`.
+- Die Datei reicht immer bis Jahresende. Sobald die Termine fürs neue Jahr da sind (meist im Dezember), neue Datei holen und einlesen. Werden die Termine knapp, zeigt die Ruhe-Ansicht einen Hinweis.
+
 ## Verhalten bei Problemen
 - Kochbuch-Seite oder Netz weg: Das Tablet zeigt den letzten gespeicherten Stand und „Offline · Stand: …“.
 - Abgelaufene Anmeldung: Die Function meldet sich automatisch neu an. Die Sitzung verlängert sich ohnehin bei jedem Abruf.
