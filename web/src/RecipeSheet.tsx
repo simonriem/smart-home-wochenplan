@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { minutesLabel, type Dish } from "./data"
+import { minutesLabel, PLAN_URL, type Dish } from "./data"
 import { clock, findDurations } from "./durations"
 
 /*
@@ -13,6 +13,13 @@ const CSS = `
 .rs{position:absolute;inset:0;z-index:20;background:#f4efe8;color:#2b2622;display:flex;flex-direction:column;
   font-family:wo-face,ui-sans-serif,system-ui,sans-serif;animation:rs-in .35s cubic-bezier(.2,.8,.2,1)}
 @keyframes rs-in{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.rs.from-right{animation:rs-r .4s cubic-bezier(.2,.8,.2,1)}
+.rs.from-left{animation:rs-l .4s cubic-bezier(.2,.8,.2,1)}
+@keyframes rs-r{from{opacity:.3;transform:translateX(70px)}to{opacity:1;transform:none}}
+@keyframes rs-l{from{opacity:.3;transform:translateX(-70px)}to{opacity:1;transform:none}}
+.rs-day{font-size:13px;font-weight:700;color:#8a8178;margin-bottom:2px;display:flex;align-items:center;gap:10px}
+.rs-dots{display:inline-flex;gap:4px;color:#c9bdb0;font-size:16px;letter-spacing:2px}
+.rs-edit{font-size:13px;font-weight:600;color:#7a6f65;text-decoration:underline;text-underline-offset:3px}
 .rs *{box-sizing:border-box}
 .rs-btn{appearance:none;border:0;font:inherit;color:inherit;cursor:pointer;background:rgba(43,38,34,.07);border-radius:99px;
   padding:12px 20px;font-size:17px;font-weight:600;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
@@ -91,7 +98,18 @@ function beep(ctx: AudioContext | null) {
   navigator.vibrate?.([300, 150, 300])
 }
 
-export function RecipeSheet({ dish, onClose }: { dish: Dish; onClose: () => void }) {
+type Props = {
+  dish: Dish
+  dayLabel: string
+  /** Woher die Ansicht hereinkommt: 0 = von unten (geöffnet), 1/-1 = vom Wischen zum nächsten/vorigen Tag */
+  enterFrom: 1 | -1 | 0
+  canPrev: boolean
+  canNext: boolean
+  onSwipeDay: (dir: 1 | -1) => void
+  onClose: () => void
+}
+
+export function RecipeSheet({ dish, dayLabel, enterFrom, canPrev, canNext, onSwipeDay, onClose }: Props) {
   const [mode, setMode] = useState<"overview" | "cook">("overview")
   const [step, setStep] = useState(0)
   const [checked, setChecked] = useState<Record<number, boolean>>({})
@@ -134,12 +152,16 @@ export function RecipeSheet({ dish, onClose }: { dish: Dish; onClose: () => void
 
   const go = (to: number) => setStep(Math.max(0, Math.min(n - 1, to)))
   const onPointerDown = (e: React.PointerEvent) => { swipe.current = { x: e.clientX, y: e.clientY } }
+  /** Wischen: im Kochmodus = Schritte, in der Übersicht = Rezept des nächsten/vorigen Tages. */
   const onPointerUp = (e: React.PointerEvent) => {
     const s = swipe.current
     swipe.current = null
     if (!s) return
     const dx = e.clientX - s.x
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(e.clientY - s.y) * 1.4) go(step + (dx < 0 ? 1 : -1))
+    if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(e.clientY - s.y) * 1.4) return
+    const dir = dx < 0 ? 1 : -1
+    if (mode === "cook") go(step + dir)
+    else if (dir === 1 ? canNext : canPrev) onSwipeDay(dir)
   }
 
   const chips = (text: string, stepIndex: number) => {
@@ -170,11 +192,15 @@ export function RecipeSheet({ dish, onClose }: { dish: Dish; onClose: () => void
   const now = Date.now()
 
   return (
-    <div className="rs" role="dialog" aria-label={`Rezept: ${dish.name}`}>
+    <div className={"rs" + (enterFrom === 1 ? " from-right" : enterFrom === -1 ? " from-left" : "")} role="dialog" aria-label={`Rezept: ${dish.name}`}>
       <style>{CSS}</style>
       <div className="rs-top">
         {dish.image ? <img className="rs-thumb" src={dish.image} alt="" /> : null}
         <div className="rs-title">
+          <div className="rs-day">
+            <span>{canPrev && mode === "overview" ? "‹ " : ""}{dayLabel}{canNext && mode === "overview" ? " ›" : ""}</span>
+            <a className="rs-edit" href={PLAN_URL} target="_blank" rel="noreferrer">Im Kochbuch ändern</a>
+          </div>
           <h2>{dish.name}</h2>
           <div className="rs-meta">
             {time ? <span>{time}</span> : null}
@@ -204,7 +230,7 @@ export function RecipeSheet({ dish, onClose }: { dish: Dish; onClose: () => void
       </div>
 
       {mode === "overview" ? (
-        <div className="rs-body">
+        <div className="rs-body" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => (swipe.current = null)} style={{ touchAction: "pan-y" }}>
           <div className="rs-panel">
             <p className="rs-h">Zutaten</p>
             {ingredients.length ? ingredientList : <p>Keine Zutaten hinterlegt.</p>}

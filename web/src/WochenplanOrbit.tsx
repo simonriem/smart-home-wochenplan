@@ -50,7 +50,7 @@ const HIDE_2 = "inset(0% 0% 0% 100%)" // dünne Zeile: wischt von rechts
 const SHOW = "inset(0% 0% 0% 0%)"
 
 const CSS = `
-.wo-root{position:relative;width:100%;height:100%;overflow:hidden;background:#f4efe8;color:#2b2622;
+.wo-root{position:relative;width:100%;height:100%;overflow:hidden;touch-action:pan-y;background:#f4efe8;color:#2b2622;
   font-family:wo-face,ui-sans-serif,system-ui,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;
   --muted:#8a8178;--card:rgba(255,255,255,.62)}
 .wo-root *{box-sizing:border-box}
@@ -106,6 +106,7 @@ const CSS = `
 .wo-tico{width:30px;height:30px;fill:none;stroke:#b9ad9f;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .wo-tcook{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wo-cta{display:block;width:100%;margin-top:16px;padding:10px 12px;border-radius:99px;background:#2b2622;color:#f4efe8;font-size:14px;font-weight:600;text-decoration:none;text-align:center;line-height:1.25}
+.wo-cta2{display:block;margin-top:10px;text-align:center;font-size:13px;font-weight:600;color:#7a6f65;text-decoration:underline;text-underline-offset:3px}
 .wo-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){.wo-tile,.wo-thumb,.wo-today{transition:none}}
 `
@@ -252,20 +253,39 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
     swipe.current = null
     if (!s) return
     const dx = e.clientX - s.x
-    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(e.clientY - s.y) * 1.4) go(index + (dx < 0 ? 1 : -1))
-    else if (Math.abs(dx) < 10 && Math.abs(e.clientY - s.y) < 10) openRecipe()
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(e.clientY - s.y) * 1.4) go(index + (dx < 0 ? 1 : -1))
+    // Tippen auf den Teller öffnet das Rezept
+    else if (Math.abs(dx) < 10 && Math.abs(e.clientY - s.y) < 10 && (e.target as HTMLElement).closest?.(".wo-plates")) openRecipe()
   }
 
   // Rezept öffnen: solange es offen ist, kein automatisches Zurückspringen.
   const openRecipe = () => {
     const dish = days[index]?.dish
     if (!dish) return
+    sheetDir.current = 0
     window.clearTimeout(returnTimer.current)
     setOpenDish(dish)
   }
   const closeRecipe = () => {
     setOpenDish(null)
     if (index !== 0) returnTimer.current = window.setTimeout(() => go(0), RETURN_MS)
+  }
+  // In der Rezeptansicht zum Rezept des nächsten/vorigen Tages wischen.
+  const sheetDir = useRef<1 | -1 | 0>(0)
+  const switchRecipe = (dir: 1 | -1) => {
+    const to = index + dir
+    if (to < 0 || to >= n) return
+    dirRef.current = dir
+    sheetDir.current = dir
+    setIndex(to)
+    const dish = days[to].dish
+    if (dish) setOpenDish(dish)
+    else closeRecipeAt(to)
+  }
+  const closeRecipeAt = (to: number) => {
+    setOpenDish(null)
+    window.clearTimeout(returnTimer.current)
+    if (to !== 0) returnTimer.current = window.setTimeout(() => go(0), RETURN_MS)
   }
 
   const clock = now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" })
@@ -274,7 +294,7 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
   return (
     <div ref={rootRef} className="wo-root" tabIndex={0} onKeyDown={onKeyDown} role="region" aria-label="Wochenplan">
       <style>{"@font-face{font-family:wo-face;src:url(./outfit.woff2) format('woff2');font-weight:100 900;font-display:swap}" + CSS}</style>
-      <div className="wo-canvas">
+      <div className="wo-canvas" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => (swipe.current = null)}>
         <svg className="wo-arc" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
           <path ref={arcRef} style={{ opacity: 0.38 }} />
         </svg>
@@ -284,7 +304,7 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
           <div className={"wo-sync" + (syncError ? " err" : "")}>{syncLabel}</div>
         </div>
 
-        <div className="wo-plates" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => (swipe.current = null)}>
+        <div className="wo-plates" style={{ cursor: days[index]?.dish ? "pointer" : "default" }}>
           {days.map((d, i) => (
             <div key={d.date} ref={(el) => { orbits.current[i] = el }} className="wo-orbit" aria-hidden={i !== index}>
               {d.dish?.image ? (
@@ -336,7 +356,10 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
                           {dish.protein ? <li>{dish.protein} g Eiweiß</li> : null}
                         </ul>
                       ) : null}
-                      <div><button type="button" className="wo-btn wo-cta" tabIndex={i === index ? 0 : -1} onClick={openRecipe}>Rezept öffnen ›</button></div>
+                      <div>
+                        <button type="button" className="wo-btn wo-cta" tabIndex={i === index ? 0 : -1} onClick={openRecipe}>Rezept öffnen ›</button>
+                        <a className="wo-cta2" href={PLAN_URL} target="_blank" rel="noreferrer" tabIndex={i === index ? 0 : -1}>Im Kochbuch ändern</a>
+                      </div>
                     </>
                   ) : d.note ? (
                     <>
@@ -383,8 +406,19 @@ export function WochenplanOrbit({ days, syncLabel, syncError, now }: Props) {
           </div>
         </div>
       </div>
-      {openDish ? <RecipeSheet dish={openDish} onClose={closeRecipe} /> : null}
-      <p className="wo-sr" aria-live="polite">{current ? `${current.weekday}: ${current.dish?.name ?? "noch nichts geplant"}` : ""}</p>
+      {openDish ? (
+        <RecipeSheet
+          key={days[index]?.date}
+          dish={openDish}
+          dayLabel={eyebrow(days[index].date, days[index].weekday, now)}
+          enterFrom={sheetDir.current}
+          canPrev={index > 0}
+          canNext={index < n - 1}
+          onSwipeDay={switchRecipe}
+          onClose={() => { sheetDir.current = 0; closeRecipe() }}
+        />
+      ) : null}
+      <p className="wo-sr" aria-live="polite">{current ? `${current.weekday}: ${current.dish?.name ?? current.note?.text ?? "noch nichts geplant"}` : ""}</p>
     </div>
   )
 }
