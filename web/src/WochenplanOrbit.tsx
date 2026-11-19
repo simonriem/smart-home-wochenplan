@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { gsap } from "gsap"
 import { accentFor, eyebrow, fitSize, minutesLabel, PLAN_URL, shortLabel, splitTitle, type Day, type Dish } from "./data"
 import { RecipeSheet } from "./RecipeSheet"
+import { darkCss } from "./theme"
 
 /*
  * Wochenplan-Orbit fürs Wand-Tablet (Querformat), angepasst aus dem
@@ -109,7 +110,24 @@ const CSS = `
 .wo-cta2{display:block;margin-top:10px;text-align:center;font-size:13px;font-weight:600;color:#7a6f65;text-decoration:underline;text-underline-offset:3px}
 .wo-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){.wo-tile,.wo-thumb,.wo-today{transition:none}}
-`
+` + darkCss(`
+.wo-root{background:#1f1915;color:#f1e6d8;--muted:#a8998a;--card:rgba(255,236,214,.07)}
+.wo-sync.err{color:#e58a63}
+.wo-plate,.wo-thumb{background:#2c241e}
+.wo-plate{box-shadow:0 22px 34px -12px rgba(0,0,0,.6),0 4px 8px rgba(0,0,0,.35),0 0 0 8px rgba(255,236,214,.09)}
+.wo-plate img,.wo-thumb img{filter:brightness(.92)}
+.wo-cutlery,.wo-tico{stroke:#6f6256}
+.wo-eye,.wo-tday{color:#cbbcab}
+.wo-t1{color:#f6ecdf}
+.wo-card{box-shadow:0 18px 40px -24px rgba(0,0,0,.7)}
+.wo-chips li{background:rgba(255,236,214,.08)}
+.wo-today,.wo-note{background:rgba(255,236,214,.07)}
+.wo-note{color:#cbbcab}
+.wo-tile[aria-current]{background:rgba(255,236,214,.09);box-shadow:0 10px 24px -16px rgba(0,0,0,.7)}
+.wo-cta{background:#e9b07a;color:#241b15}
+.wo-cta2{color:#b8a898}
+.wo-arc path{opacity:.42 !important}
+`)
 
 const NOTE_ICON = (cls: string) => (
   <svg className={cls} viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h10l4 4v12H5zM15 4v4h4M8 12h8M8 16h5" /></svg>

@@ -111,7 +111,7 @@ export default function App() {
 
 function Message({ title, text }: { title: string; text: string }) {
   return (
-    <div style={{ height: "100%", display: "grid", placeItems: "center", fontFamily: "system-ui, sans-serif", color: "#5e554c", textAlign: "center" }}>
+    <div style={{ height: "100%", display: "grid", placeItems: "center", fontFamily: "system-ui, sans-serif", color: "inherit", opacity: 0.8, textAlign: "center" }}>
       <div><div style={{ fontSize: 24, fontWeight: 600 }}>{title}</div><div style={{ marginTop: 8 }}>{text}</div></div>
     </div>
   )

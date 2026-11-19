@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { minutesLabel, PLAN_URL, type Dish } from "./data"
 import { clock, findDurations } from "./durations"
+import { darkCss } from "./theme"
 
 /*
  * Rezeptansicht über dem Dashboard: Übersicht (Zutaten zum Abhaken + alle Schritte)
@@ -68,7 +69,27 @@ const CSS = `
 .rs-nav .rs-btn{padding:18px 30px;font-size:20px}
 .rs-cook .rs-chip{font-size:19px;padding:11px 20px}
 .rs-side{overflow:auto}
-`
+` + darkCss(`
+.rs{background:#1f1915;color:#f1e6d8}
+.rs-day,.rs-h,.rs-stepno{color:#a8998a}
+.rs-dots{color:#5c4f44}
+.rs-edit{color:#b8a898}
+.rs-btn{background:rgba(255,236,214,.08)}
+.rs-btn.primary,.rs-num,.rs-timer{background:#e9b07a;color:#241b15}
+.rs-btn.ghost{background:none}
+.rs-timer button{background:rgba(0,0,0,.12)}
+.rs-timer.done{background:#d9603b;color:#fff}
+.rs-thumb{box-shadow:0 4px 10px rgba(0,0,0,.45)}
+.rs-meta span{background:rgba(255,236,214,.08)}
+.rs-panel,.rs-stage{background:rgba(255,236,214,.05)}
+.rs-ing li,.rs-steps li{border-bottom-color:rgba(255,236,214,.08)}
+.rs-box{border-color:#5c4f44}
+.rs-ing li.on{color:#7d7064}
+.rs-ing li.on .rs-box{background:#8fb07a;border-color:#8fb07a}
+.rs-chip{background:#f6a37c26;color:#f3b08c}
+.rs-tip{background:#3a2f1f;color:#f1e2c4}
+.rs-progress{background:rgba(255,236,214,.1)}
+`)
 
 const ICON = {
   close: <svg className="rs-ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg>,

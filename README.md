@@ -37,6 +37,11 @@ Einmal mit `?key=` öffnen. Danach speichert das Tablet den Schlüssel und entfe
 Dann in Chrome über das Menü „App installieren“ wählen. Die App startet im Vollbild und im Querformat, und das Display bleibt an, solange sie offen ist.
 Mit Beispieldaten ohne Schlüssel: `…/?demo=1`
 
+## Hell und Dunkel
+- Standard: Die Seite folgt dem Dunkelmodus des Tablets (Samsung: Dunkelmodus nach Zeitplan, Sonnenuntergang bis Sonnenaufgang). Dunkel ist ein warmes Braun-Anthrazit mit Creme-Schrift und bernsteinfarbenen Knöpfen.
+- Die Seite meldet `color-scheme: light dark`, damit die WebView (z. B. Fully Kiosk) nicht selbst umfärbt.
+- Fest einstellen: einmal `…/?theme=dark`, `…/?theme=light` oder zurück mit `…/?theme=auto` öffnen. Das Tablet merkt sich die Wahl.
+
 ## Verhalten bei Problemen
 - Kochbuch-Seite oder Netz weg: Das Tablet zeigt den letzten gespeicherten Stand und „Offline · Stand: …“.
 - Abgelaufene Anmeldung: Die Function meldet sich automatisch neu an. Die Sitzung verlängert sich ohnehin bei jedem Abruf.
